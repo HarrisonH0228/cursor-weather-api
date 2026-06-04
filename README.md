@@ -52,9 +52,9 @@ The scheduler fetches the default city on startup and every `REFRESH_INTERVAL_MI
 
 ## Caching (rate-limit friendly)
 
-**Server cache** (`data/cache.json`): stores multiple cities by normalized search key. Repeat lookups within `CACHE_TTL_MINUTES` skip Open-Meteo calls. Check **Force refresh** to bypass TTL.
+**Server cache** (`data/cache.json`): stores multiple cities by normalized search key. Repeat lookups within `CACHE_TTL_MINUTES` skip Open-Meteo calls. Check **Force refresh** to bypass TTL. On each refresh (scheduler every `REFRESH_INTERVAL_MINUTES`, manual search, or API call), entries older than `CACHE_TTL_MINUTES` are **removed** from the file—only fresh cities are kept.
 
-**Browser cache** (`localStorage`): mirrors successful lookups for the same TTL so re-searching a city in one session can avoid even calling `/api/refresh`.
+**Browser cache** (`localStorage`): mirrors successful lookups for the same TTL so re-searching a city in one session can avoid even calling `/api/refresh`. Stale browser entries are pruned after each API response.
 
 ## JSON API
 

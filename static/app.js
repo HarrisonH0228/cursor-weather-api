@@ -28,6 +28,20 @@ function setClientCache(key, data) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
 }
 
+function pruneClientCache() {
+  const store = getClientCache();
+  let changed = false;
+  for (const key of Object.keys(store)) {
+    if (!isClientFresh(store[key])) {
+      delete store[key];
+      changed = true;
+    }
+  }
+  if (changed) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  }
+}
+
 function isClientFresh(wrapper) {
   if (!wrapper || !wrapper.data || wrapper.data.status !== "ok") {
     return false;
@@ -186,8 +200,10 @@ async function handleSearch(event) {
     if (data.status === "ok") {
       renderWeather(data, hint);
       setClientCache(key, data);
+      pruneClientCache();
     } else {
       renderError(data, hint);
+      pruneClientCache();
     }
   } catch {
     renderError({ error: "Could not reach the server. Try again." });

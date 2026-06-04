@@ -140,6 +140,78 @@ def test_migrate_legacy_cache(cache_file):
     assert "san francisco" in store["active_key"]
 
 
+def _fresh_entry(query, city, fetched_at="2099-01-01T00:00:00+00:00"):
+    return {
+        "status": "ok",
+        "query": query,
+        "city": city,
+        "temperature_c": 20.0,
+        "fetched_at": fetched_at,
+        "error": None,
+    }
+
+
+def _stale_entry(query, city):
+    return {
+        "status": "ok",
+        "query": query,
+        "city": city,
+        "temperature_c": 10.0,
+        "fetched_at": "2020-01-01T00:00:00+00:00",
+        "error": None,
+    }
+
+
+def test_prune_removes_stale_keeps_fresh(cache_file):
+    store = {
+        "active_key": "london",
+        "entries": {
+            "london": _fresh_entry("London", "London, UK"),
+            "paris": _stale_entry("Paris", "Paris, France"),
+        },
+    }
+    cache_file.write_text(json.dumps(store), encoding="utf-8")
+
+    fetcher.refresh_weather("London")
+
+    cached = json.loads(cache_file.read_text())
+    assert "london" in cached["entries"]
+    assert "paris" not in cached["entries"]
+
+
+def test_prune_preserves_always_keep(cache_file):
+    store = {
+        "active_key": "paris",
+        "entries": {
+            "paris": _stale_entry("Paris", "Paris, France"),
+        },
+    }
+    cache_file.write_text(json.dumps(store), encoding="utf-8")
+
+    fetcher._prune_stale_entries(store, always_keep="paris")
+    fetcher.save_cache(store)
+
+    cached = json.loads(cache_file.read_text())
+    assert "paris" in cached["entries"]
+
+
+def test_prune_resets_active_key(cache_file):
+    store = {
+        "active_key": "paris",
+        "entries": {
+            "paris": _stale_entry("Paris", "Paris, France"),
+            "london": _fresh_entry("London", "London, UK"),
+        },
+    }
+    cache_file.write_text(json.dumps(store), encoding="utf-8")
+
+    fetcher.refresh_weather("London")
+
+    cached = json.loads(cache_file.read_text())
+    assert cached["active_key"] == "london"
+    assert "paris" not in cached["entries"]
+
+
 def test_get_cached_weather_by_city(cache_file):
     store = {
         "active_key": "london",

@@ -133,6 +133,25 @@ def get_cached_weather(city: str | None = None) -> dict:
     return entry if entry is not None else {}
 
 
+def _prune_stale_entries(store: dict, always_keep: str | None = None) -> dict:
+    entries = store.get("entries", {})
+    before = len(entries)
+    kept = {}
+    for key, entry in entries.items():
+        if key == always_keep or _is_fresh(entry):
+            kept[key] = entry
+    store["entries"] = kept
+    if store.get("active_key") not in kept:
+        if always_keep and always_keep in kept:
+            store["active_key"] = always_keep
+        else:
+            store["active_key"] = next(iter(kept), None)
+    pruned = before - len(kept)
+    if pruned:
+        logger.info("Pruned %s stale cache entr%s", pruned, "y" if pruned == 1 else "ies")
+    return store
+
+
 def _error_entry(message: str, query: str | None = None) -> dict:
     return {
         "status": "error",
@@ -152,6 +171,7 @@ def _persist_entry(store: dict, key: str, entry: dict) -> None:
     entry = {k: v for k, v in entry.items() if k != "from_cache"}
     store.setdefault("entries", {})[key] = entry
     store["active_key"] = key
+    _prune_stale_entries(store, always_keep=key)
     save_cache(store)
 
 
@@ -218,6 +238,7 @@ def refresh_weather(city: str | None = None, force: bool = False) -> dict:
 
     if not force and existing and _is_fresh(existing):
         store["active_key"] = key
+        _prune_stale_entries(store, always_keep=key)
         save_cache(store)
         logger.info("Serving cached weather for %s", target_city)
         return _response_with_meta(existing, from_cache=True)
