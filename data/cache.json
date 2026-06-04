@@ -7,22 +7,10 @@
       "city": "San Francisco, California, United States",
       "latitude": 37.77493,
       "longitude": -122.41942,
-      "temperature_c": 18.5,
-      "wind_speed_kmh": 2.5,
+      "temperature_c": 20.4,
+      "wind_speed_kmh": 7.4,
       "description": "Clear sky",
-      "fetched_at": "2026-06-04T17:55:24.083597+00:00",
-      "error": null
-    },
-    "kansas city": {
-      "status": "ok",
-      "query": "Kansas City",
-      "city": "Kansas City, Missouri, United States",
-      "latitude": 39.09973,
-      "longitude": -94.57857,
-      "temperature_c": 29.1,
-      "wind_speed_kmh": 16.9,
-      "description": "Mainly clear",
-      "fetched_at": "2026-06-04T17:56:45.134866+00:00",
+      "fetched_at": "2026-06-04T18:42:07.730240+00:00",
       "error": null
     }
   }

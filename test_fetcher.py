@@ -1,6 +1,7 @@
 import json
 
 import pytest
+import requests
 import responses
 
 import fetcher
@@ -210,6 +211,44 @@ def test_prune_resets_active_key(cache_file):
     cached = json.loads(cache_file.read_text())
     assert cached["active_key"] == "london"
     assert "paris" not in cached["entries"]
+
+
+@responses.activate
+def test_refresh_api_down_returns_stale(cache_file, monkeypatch):
+    _mock_weather_apis()
+    fetcher.refresh_weather("San Francisco")
+
+    def fail_geocode(city):
+        raise requests.ConnectionError("API down")
+
+    monkeypatch.setattr(fetcher, "_geocode", fail_geocode)
+    result = fetcher.refresh_weather("San Francisco", force=True)
+    assert result["status"] == "ok"
+    assert result.get("stale") is True
+    cached = json.loads(cache_file.read_text())
+    assert cached["entries"]["san francisco"]["status"] == "ok"
+
+
+def test_refresh_api_down_no_prior_ok(cache_file, monkeypatch):
+    def fail_geocode(city):
+        raise requests.ConnectionError("API down")
+
+    monkeypatch.setattr(fetcher, "_geocode", fail_geocode)
+    result = fetcher.refresh_weather("Nowhere", force=True)
+    assert result["status"] == "error"
+    cached = json.loads(cache_file.read_text())
+    assert cached["entries"]["nowhere"]["status"] == "error"
+
+
+def test_get_display_weather_ok(cache_file):
+    store = {
+        "active_key": "london",
+        "entries": {
+            "london": {"status": "ok", "city": "London", "query": "London"},
+        },
+    }
+    cache_file.write_text(json.dumps(store), encoding="utf-8")
+    assert fetcher.get_display_weather()["city"] == "London"
 
 
 def test_get_cached_weather_by_city(cache_file):

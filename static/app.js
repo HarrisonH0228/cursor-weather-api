@@ -73,13 +73,38 @@ function formatFetchedAt(iso) {
   });
 }
 
+function setUpdatedText(iso, fallback) {
+  const updated = document.getElementById("updated");
+  if (!updated) return;
+  if (iso) {
+    updated.textContent = `Last updated ${formatFetchedAt(iso)}`;
+    updated.dataset.fetchedAt = iso;
+    updated.hidden = false;
+  } else {
+    updated.textContent = fallback || "Last updated: unavailable";
+    updated.hidden = false;
+    delete updated.dataset.fetchedAt;
+  }
+}
+
 function formatInitialTimestamp() {
   const updated = document.getElementById("updated");
   if (!updated) return;
   const iso = updated.dataset.fetchedAt;
-  if (!iso) return;
-  updated.textContent = `Last updated ${formatFetchedAt(iso)}`;
-  updated.hidden = false;
+  if (iso) {
+    setUpdatedText(iso);
+  }
+}
+
+function setStaleAlert(message, visible) {
+  const alert = document.getElementById("stale-alert");
+  if (!alert) return;
+  if (visible && message) {
+    alert.textContent = message;
+    alert.classList.remove("d-none");
+  } else {
+    alert.classList.add("d-none");
+  }
 }
 
 function setHint(message) {
@@ -88,8 +113,6 @@ function setHint(message) {
   if (message) {
     el.textContent = message;
     el.hidden = false;
-    el.classList.add("status-hint");
-    el.classList.remove("error-message");
   } else {
     el.hidden = true;
     el.textContent = "";
@@ -98,56 +121,55 @@ function setHint(message) {
 
 function renderWeather(data, hint) {
   const card = document.getElementById("weather-card");
-  card.classList.remove("error");
+  card.classList.remove("border-danger");
 
   document.getElementById("city-name").textContent = data.city || data.query || "";
-  document.getElementById("conditions").textContent = data.description || "";
-  document.getElementById("conditions").classList.remove("error-message");
-  document.getElementById("conditions").classList.add("conditions");
+  const conditions = document.getElementById("conditions");
+  conditions.textContent = data.description || "";
+  conditions.classList.remove("text-danger");
 
   document.getElementById("temperature").textContent = formatTemp(data.temperature_c);
 
   const windRow = document.getElementById("wind-row");
   const windEl = document.getElementById("wind");
   if (data.wind_speed_kmh != null) {
-    windRow.hidden = false;
+    windRow.classList.remove("d-none");
     windEl.textContent = formatWind(data.wind_speed_kmh);
-  } else {
-    windRow.hidden = true;
+  } else if (windRow) {
+    windRow.classList.add("d-none");
   }
 
   const metrics = document.getElementById("metrics");
-  if (metrics) metrics.hidden = false;
+  if (metrics) metrics.classList.remove("d-none");
 
-  const updated = document.getElementById("updated");
-  if (data.fetched_at) {
-    updated.textContent = `Last updated ${formatFetchedAt(data.fetched_at)}`;
-    updated.dataset.fetchedAt = data.fetched_at;
-    updated.hidden = false;
-  } else {
-    updated.hidden = true;
-    delete updated.dataset.fetchedAt;
-  }
+  setUpdatedText(data.fetched_at);
+  setStaleAlert(
+    data.warning || (data.stale ? "Showing cached data; live refresh unavailable." : ""),
+    Boolean(data.stale)
+  );
 
   document.title = `Weather — ${data.city || data.query || ""}`;
   setHint(hint || "");
 }
 
 function renderError(data, hint) {
+  if (data.status === "ok" || (data.stale && data.temperature_c != null)) {
+    renderWeather(data, hint || data.warning);
+    return;
+  }
+
   const card = document.getElementById("weather-card");
-  card.classList.add("error");
+  card.classList.add("border-danger");
 
   document.getElementById("city-name").textContent = "Weather unavailable";
   const conditions = document.getElementById("conditions");
   conditions.textContent = data.error || "Unable to load weather data.";
-  conditions.classList.add("error-message");
-  conditions.classList.remove("conditions");
 
   const metrics = document.getElementById("metrics");
-  if (metrics) metrics.hidden = true;
+  if (metrics) metrics.classList.add("d-none");
 
-  const updated = document.getElementById("updated");
-  if (updated) updated.hidden = true;
+  setStaleAlert(null, false);
+  setUpdatedText(data.fetched_at, "Last updated: unavailable");
 
   if (data.city || data.query) {
     setHint(hint || `Requested: ${data.city || data.query}`);
@@ -168,12 +190,12 @@ function setLoading(loading) {
   } else {
     card.classList.remove("loading");
     button.disabled = false;
-    button.textContent = card.classList.contains("error") ? "Retry" : "Search";
+    button.textContent = card.classList.contains("border-danger") ? "Retry" : "Search";
   }
 }
 
 async function fetchWeather(city, force) {
-  const response = await fetch("/api/refresh", {
+  const response = await fetch("/search", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ city, force }),
@@ -182,6 +204,9 @@ async function fetchWeather(city, force) {
 }
 
 function hintForResponse(data) {
+  if (data.stale) {
+    return data.warning || "Showing cached data (API unavailable).";
+  }
   if (data.from_cache) {
     return "Loaded from cache (no API call).";
   }
@@ -196,14 +221,14 @@ async function handleSearch(event) {
 
   const input = document.getElementById("city");
   const force = document.getElementById("force").checked;
-  const city = (input.value.trim() || defaultCity());
+  const city = input.value.trim() || defaultCity();
   const key = cacheKey(city);
 
   if (!force) {
     const clientEntry = getClientCache()[key];
     if (isClientFresh(clientEntry)) {
       const data = clientEntry.data;
-      if (data.status === "ok") {
+      if (data.status === "ok" || data.stale) {
         renderWeather(data, "Loaded from browser cache.");
       } else {
         renderError(data);

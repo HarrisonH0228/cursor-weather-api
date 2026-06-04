@@ -1,0 +1,46 @@
+---
+description: System architecture and structural decisions for the weather API warm-up
+alwaysApply: true
+---
+
+# Architecture
+
+## Module boundaries
+
+- **`fetcher.py`** — Open-Meteo HTTP, `data/cache.json` read/write, TTL, stale-on-outage, cache pruning.
+- **`app.py`** — Flask routes only; delegates to fetcher. No `requests` in routes.
+- **`scheduler.py`** — APScheduler background job; calls `refresh_weather(force=True)` for `DEFAULT_CITY`.
+
+## Cache (`data/cache.json`)
+
+```json
+{ "active_key": "san francisco", "entries": { "<normalized query>": { "status": "ok", ... } } }
+```
+
+- **Stale semantics:** If the API is down but a prior `ok` entry exists, return it with `stale: true` and do not overwrite the file with an error.
+- **Prune:** Entries older than `CACHE_TTL_MINUTES` are removed on cache writes (except `always_keep` key).
+
+## Routes
+
+| Route | Purpose |
+|-------|---------|
+| `GET /` | Render Bootstrap dashboard from `get_display_weather()` |
+| `POST /search` | AJAX city search (primary); JSON in/out |
+| `POST /api/refresh` | Alias of `/search` |
+| `POST /refresh` | No-JS form fallback (redirect) |
+
+## Frontend
+
+- **Bootstrap 5** via CDN in `templates/base.html`.
+- **`static/app.js`** — `fetch("/search")`, localStorage TTL mirror, local-time `fetched_at` display.
+
+## External API
+
+- **Open-Meteo** (geocoding + forecast). No API key; config in `.env` only.
+
+## Errors
+
+- `_error.html` for missing data, HTTP errors, and unhandled exceptions (no stack traces to users).
+- Register new global handlers in `create_app()` when adding routes.
+
+Update this file when you change module layout, cache shape, or route contracts.

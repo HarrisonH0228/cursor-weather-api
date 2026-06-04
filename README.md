@@ -1,6 +1,6 @@
 # cursor-weather-api
 
-Warm-up weather dashboard by **harrisonhoggatt**. A small Flask app that caches current weather from [Open-Meteo](https://open-meteo.com/) and refreshes it on a background schedule.
+Warm-up weather dashboard by **harrisonhoggatt**. Flask app with Bootstrap 5 UI, Open-Meteo data, file cache, and scheduled background refresh.
 
 ## Project layout
 
@@ -9,29 +9,29 @@ cursor-weather-api/
 ├── app.py               # Flask routes only
 ├── fetcher.py           # Open-Meteo API calls and cache I/O
 ├── scheduler.py         # Background refresh (APScheduler)
-├── data/
-│   └── cache.json       # Per-city server cache
+├── data/cache.json
 ├── templates/
+│   ├── base.html        # Bootstrap 5 layout
 │   ├── index.html
 │   └── _error.html
 ├── static/
 │   ├── style.css
-│   └── app.js           # In-page search + browser cache
-├── .cursor/rules/       # Cursor agent rules
+│   └── app.js           # fetch() to POST /search
+├── .cursor/rules/       # Includes architecture.mdc
 ├── .env
-├── requirements.txt
-└── README.md
+├── .flaskenv
+└── requirements.txt
 ```
 
 ## Setup
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Copy or edit `.env` as needed:
+Edit `.env` (Open-Meteo needs no API key):
 
 ```
 DEFAULT_CITY=San Francisco
@@ -43,29 +43,34 @@ FLASK_DEBUG=1
 ## Run
 
 ```bash
-flask --app "app:create_app()" run
+flask run
 ```
 
-Open http://127.0.0.1:5000/ in Chrome or Safari (Cursor’s built-in browser may show a blank page).
+Uses `.flaskenv` (`FLASK_APP=app`). Alternative: `flask --app "app:create_app()" run`.
 
-The scheduler fetches the default city on startup and every `REFRESH_INTERVAL_MINUTES` (always calls Open-Meteo, ignoring TTL). Use the **Search** form to look up another city without a full page reload.
+Open http://127.0.0.1:5000/ in Chrome or Safari.
 
-## Caching (rate-limit friendly)
+## Features (project-reqs)
 
-**Server cache** (`data/cache.json`): stores multiple cities by normalized search key. Repeat manual lookups within `CACHE_TTL_MINUTES` skip Open-Meteo calls. Check **Force refresh** to bypass TTL. Background scheduler refresh always re-fetches `DEFAULT_CITY` from the API. On each cache write, entries older than `CACHE_TTL_MINUTES` are **removed** from the file—only fresh cities are kept.
+- **Cache:** API data stored in `data/cache.json`
+- **Bootstrap 5** dashboard reading from cache
+- **Scheduler:** default city refreshed every 15 minutes (`force=True`, always hits API)
+- **Search:** in-page `POST /search` via JavaScript (no full reload)
+- **API down:** returns stale cached weather + timestamp when prior data exists
+- **Last updated:** always shown (local timezone in browser)
+- **Errors:** `_error.html` for failures and unhandled exceptions (no stack traces)
 
-**Browser cache** (`localStorage`): mirrors successful lookups for the same TTL so re-searching a city in one session can avoid even calling `/api/refresh`. Stale browser entries are pruned after each API response.
+## Caching
 
-**Last updated** is shown in your browser's local timezone (cache still stores UTC).
+Manual search respects `CACHE_TTL_MINUTES` unless **Force refresh** is checked. Scheduler ignores TTL for `DEFAULT_CITY`. Stale entries are pruned from `cache.json` on writes.
 
-## JSON API
+## API
 
 | Endpoint | Description |
 |----------|-------------|
-| `POST /api/refresh` | Body: `{"city": "London", "force": false}`. Returns weather JSON with `from_cache` boolean. Always HTTP 200; errors use `status: "error"`. |
-| `GET /api/weather?city=London` | Read-only cached entry; 404 if missing. |
-
-`POST /refresh` remains a no-JavaScript fallback (form POST + redirect).
+| `POST /search` | Primary AJAX search: `{"city": "London", "force": false}` |
+| `POST /api/refresh` | Alias of `/search` |
+| `GET /api/weather?city=` | Read-only cache lookup |
 
 ## Tests
 
@@ -75,4 +80,4 @@ pytest
 
 ## Data source
 
-Geocoding and forecast data from [Open-Meteo](https://open-meteo.com/). No API key required.
+[Open-Meteo](https://open-meteo.com/) — no API key required.

@@ -127,3 +127,50 @@ def test_api_weather_not_found(client, cache_file):
     )
     response = client.get("/api/weather?city=Atlantis")
     assert response.status_code == 404
+
+
+def test_search_route(client, cache_file, monkeypatch):
+    monkeypatch.setattr(
+        "fetcher.refresh_weather",
+        lambda city=None, force=False: {
+            "status": "ok",
+            "city": "London",
+            "from_cache": False,
+        },
+    )
+    response = client.post("/search", json={"city": "London"})
+    assert response.status_code == 200
+    assert response.get_json()["city"] == "London"
+
+
+def test_index_uses_display_weather(client, cache_file):
+    cache_file.write_text(
+        json.dumps(
+            {
+                "active_key": "bad",
+                "entries": {
+                    "bad": {"status": "error", "error": "bad"},
+                    "london": {
+                        "status": "ok",
+                        "query": "London",
+                        "city": "London, UK",
+                        "temperature_c": 12.0,
+                        "description": "Cloudy",
+                        "fetched_at": "2026-06-04T12:00:00+00:00",
+                        "error": None,
+                    },
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    response = client.get("/")
+    assert response.status_code == 200
+    assert b"London" in response.data
+
+
+def test_500_returns_error_template(client):
+    response = client.get("/__test_raise")
+    assert response.status_code == 500
+    assert b"Weather unavailable" in response.data
+    assert b"Traceback" not in response.data

@@ -133,6 +133,23 @@ def get_cached_weather(city: str | None = None) -> dict:
     return entry if entry is not None else {}
 
 
+def get_display_weather(city: str | None = None) -> dict:
+    """Return weather suitable for the main UI (ok entries only)."""
+    entry = get_entry(city)
+    if entry and entry.get("status") == "ok":
+        return entry
+    store = load_cache()
+    key = _cache_key(city) if city else store.get("active_key")
+    if key:
+        cached = store.get("entries", {}).get(key)
+        if cached and cached.get("status") == "ok":
+            return cached
+    for entry in store.get("entries", {}).values():
+        if entry.get("status") == "ok":
+            return entry
+    return {}
+
+
 def _prune_stale_entries(store: dict, always_keep: str | None = None) -> dict:
     entries = store.get("entries", {})
     before = len(entries)
@@ -179,6 +196,25 @@ def _response_with_meta(entry: dict, from_cache: bool) -> dict:
     result = dict(entry)
     result["from_cache"] = from_cache
     return result
+
+
+def _stale_response(existing: dict, warning: str) -> dict:
+    result = {
+        k: v
+        for k, v in existing.items()
+        if k not in ("from_cache", "stale", "warning")
+    }
+    result["status"] = "ok"
+    result["stale"] = True
+    result["warning"] = warning
+    return _response_with_meta(result, from_cache=True)
+
+
+def _maybe_return_stale(existing: dict | None, warning: str) -> dict | None:
+    if existing and existing.get("status") == "ok":
+        logger.warning("Returning stale cache: %s", warning)
+        return _stale_response(existing, warning)
+    return None
 
 
 def _geocode(city: str) -> tuple[float, float, str]:
@@ -264,12 +300,24 @@ def refresh_weather(city: str | None = None, force: bool = False) -> dict:
         return _response_with_meta(entry, from_cache=False)
     except requests.RequestException as exc:
         logger.error("Weather API request failed: %s", exc)
+        stale = _maybe_return_stale(
+            existing,
+            "Weather service unavailable; showing cached data.",
+        )
+        if stale:
+            return stale
         entry = _error_entry(f"Weather service unavailable: {exc}", target_city)
     except (ValueError, KeyError) as exc:
         logger.error("Weather fetch failed: %s", exc)
         entry = _error_entry(str(exc), target_city)
     except Exception as exc:
         logger.error("Unexpected weather fetch error: %s", exc)
+        stale = _maybe_return_stale(
+            existing,
+            "Unexpected error; showing cached data.",
+        )
+        if stale:
+            return stale
         entry = _error_entry(f"Unexpected error: {exc}", target_city)
 
     _persist_entry(store, key, entry)

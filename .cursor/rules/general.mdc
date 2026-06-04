@@ -11,3 +11,4 @@ alwaysApply: true
 - Use Python 3.11+ type hints where practical.
 - Log errors in `fetcher.py` and `scheduler.py`; routes should not swallow exceptions silently.
 - Cache shape is defined in `fetcher.py`; templates consume the dict as-is without reshaping business data.
+- See `architecture.mdc` for routes, stale-cache semantics, and structural decisions.
