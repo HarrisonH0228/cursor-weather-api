@@ -3,7 +3,7 @@
 1. Fetch data from your API → store in `data/cache.json`
 2. Serve a web page reading from cache — clean Bootstrap 5 layout
 3. Refresh cache automatically every 15 minutes via APScheduler
-4. Let the user search or filter without a full page reload (JavaScript `fetch()` to a `/search` route)
+4. Let the user search without a full page reload
 5. Handle errors gracefully — API down → show stale cache with timestamp, not a crash
 6. Display a "last updated" timestamp at all times
 7. Show a proper error page (`_error.html`) for unhandled exceptions — no raw stack traces
