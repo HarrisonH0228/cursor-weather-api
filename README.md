@@ -56,6 +56,8 @@ The scheduler fetches the default city on startup and every `REFRESH_INTERVAL_MI
 
 **Browser cache** (`localStorage`): mirrors successful lookups for the same TTL so re-searching a city in one session can avoid even calling `/api/refresh`. Stale browser entries are pruned after each API response.
 
+**Last updated** is shown in your browser's local timezone (cache still stores UTC).
+
 ## JSON API
 
 | Endpoint | Description |

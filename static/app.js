@@ -64,6 +64,24 @@ function formatWind(value) {
   return `${Number(value).toFixed(1)} km/h`;
 }
 
+function formatFetchedAt(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+function formatInitialTimestamp() {
+  const updated = document.getElementById("updated");
+  if (!updated) return;
+  const iso = updated.dataset.fetchedAt;
+  if (!iso) return;
+  updated.textContent = `Last updated ${formatFetchedAt(iso)}`;
+  updated.hidden = false;
+}
+
 function setHint(message) {
   const el = document.getElementById("status-message");
   if (!el) return;
@@ -103,10 +121,12 @@ function renderWeather(data, hint) {
 
   const updated = document.getElementById("updated");
   if (data.fetched_at) {
-    updated.textContent = `Last updated ${data.fetched_at}`;
+    updated.textContent = `Last updated ${formatFetchedAt(data.fetched_at)}`;
+    updated.dataset.fetchedAt = data.fetched_at;
     updated.hidden = false;
   } else {
     updated.hidden = true;
+    delete updated.dataset.fetchedAt;
   }
 
   document.title = `Weather — ${data.city || data.query || ""}`;
@@ -213,6 +233,7 @@ async function handleSearch(event) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  formatInitialTimestamp();
   const form = document.getElementById("search-form");
   if (form) {
     form.addEventListener("submit", handleSearch);
