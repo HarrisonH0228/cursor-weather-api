@@ -1,0 +1,14 @@
+---
+description: Thin Flask route layer
+globs: app.py
+alwaysApply: false
+---
+
+# Flask routes
+
+- `app.py` must not import `requests` or call external APIs directly.
+- Routes delegate to `fetcher.get_cached_weather()` and `fetcher.refresh_weather()` only.
+- Return HTTP 503 when cache `status` is not `"ok"` and render `_error.html`.
+- Scheduler setup belongs in `scheduler.init_scheduler()`, invoked from `create_app()` when enabled.
+- Keep route handlers short; no cache file parsing in routes.
+- JSON routes may use `jsonify`; still delegate to `fetcher` only.

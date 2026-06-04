@@ -1,0 +1,13 @@
+---
+description: Project-wide standards for the weather API warm-up
+alwaysApply: true
+---
+
+# General standards
+
+- Keep **separation of concerns**: `app.py` routes only, `fetcher.py` all HTTP and cache I/O, `scheduler.py` background jobs only.
+- Read configuration from `.env` via `python-dotenv`; never hardcode cities or intervals.
+- Do not commit API keys (Open-Meteo needs none). Use `.env.local` for personal overrides (gitignored).
+- Use Python 3.11+ type hints where practical.
+- Log errors in `fetcher.py` and `scheduler.py`; routes should not swallow exceptions silently.
+- Cache shape is defined in `fetcher.py`; templates consume the dict as-is without reshaping business data.

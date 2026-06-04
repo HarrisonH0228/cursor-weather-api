@@ -1,0 +1,13 @@
+---
+description: Pytest conventions
+globs: "**/test_*.py"
+alwaysApply: false
+---
+
+# Testing
+
+- Use pytest; name files `test_*.py`.
+- Mock HTTP with `responses` or `unittest.mock` — do not hit Open-Meteo in unit tests.
+- Test observable behavior (cache contents, HTTP status codes) not private implementation details.
+- Use a temporary cache path or isolate `data/cache.json` in fixtures when testing fetcher.
+- Create the Flask app with `create_app(enable_scheduler=False)` to avoid background jobs in tests.

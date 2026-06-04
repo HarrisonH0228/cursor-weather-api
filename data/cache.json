@@ -1,0 +1,29 @@
+{
+  "active_key": "san francisco",
+  "entries": {
+    "san francisco, california, united states": {
+      "status": "ok",
+      "city": "San Francisco, California, United States",
+      "latitude": 37.77493,
+      "longitude": -122.41942,
+      "temperature_c": 16.8,
+      "wind_speed_kmh": 5.6,
+      "description": "Clear sky",
+      "fetched_at": "2026-06-04T17:02:18.535056+00:00",
+      "error": null,
+      "query": "San Francisco, California, United States"
+    },
+    "san francisco": {
+      "status": "ok",
+      "query": "San Francisco",
+      "city": "San Francisco, California, United States",
+      "latitude": 37.77493,
+      "longitude": -122.41942,
+      "temperature_c": 17.4,
+      "wind_speed_kmh": 4.9,
+      "description": "Clear sky",
+      "fetched_at": "2026-06-04T17:18:47.090011+00:00",
+      "error": null
+    }
+  }
+}

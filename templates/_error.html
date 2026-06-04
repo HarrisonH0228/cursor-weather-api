@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather unavailable</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body
+  data-default-city="{{ default_city }}"
+  data-cache-ttl-minutes="{{ cache_ttl_minutes }}"
+>
+  <main class="card error" id="weather-card">
+    <h1 id="city-name">Weather unavailable</h1>
+    <p class="error-message" id="conditions">{{ weather.error or "Unable to load weather data." }}</p>
+    {% if weather.city %}
+    <p class="error-context" id="status-message">Requested: {{ weather.city }}</p>
+    {% else %}
+    <p class="error-context" id="status-message" hidden></p>
+    {% endif %}
+
+    <section class="metrics" id="metrics" hidden aria-label="Current conditions">
+      <div class="metric">
+        <span class="label">Temperature</span>
+        <span class="value" id="temperature"></span>
+      </div>
+      <div class="metric" id="wind-row" hidden>
+        <span class="label">Wind</span>
+        <span class="value" id="wind"></span>
+      </div>
+    </section>
+
+    <p class="updated" id="updated" hidden></p>
+
+    <form class="refresh-form" id="search-form" action="{{ url_for('refresh') }}" method="post">
+      <label for="city">Try another city</label>
+      <input type="text" id="city" name="city" placeholder="e.g. London">
+      <label class="checkbox-label">
+        <input type="checkbox" id="force" name="force" value="true">
+        Force refresh (bypass cache)
+      </label>
+      <button type="submit" id="search-button">Retry</button>
+    </form>
+
+    <p><a href="{{ url_for('index') }}">Back to home</a></p>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>

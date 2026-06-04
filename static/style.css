@@ -1,0 +1,158 @@
+:root {
+  --bg: #0f1419;
+  --card: #1a2332;
+  --text: #e7ecf3;
+  --muted: #8b9cb3;
+  --accent: #3b9eff;
+  --error: #f87171;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card);
+  border-radius: 12px;
+  padding: 1.75rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.card.error {
+  border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+}
+
+.conditions {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+.metrics {
+  display: grid;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.label {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.value {
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.updated {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 1.25rem;
+}
+
+.refresh-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.refresh-form label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.refresh-form input {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #2d3a4f;
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.refresh-form button {
+  margin-top: 0.25rem;
+  padding: 0.65rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.refresh-form button:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.refresh-form button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  width: auto;
+}
+
+.card.loading {
+  opacity: 0.85;
+}
+
+.status-hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+
+.error-message {
+  color: var(--error);
+  margin: 0.75rem 0;
+}
+
+.error-context {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+a {
+  color: var(--accent);
+}
+
+footer {
+  margin-top: 2rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}

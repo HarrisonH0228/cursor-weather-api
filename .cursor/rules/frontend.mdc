@@ -1,0 +1,14 @@
+---
+description: HTML template conventions
+globs: templates/**/*.html
+alwaysApply: false
+---
+
+# Frontend (Jinja templates)
+
+- Use semantic HTML (`main`, `header`, `section`, `footer`).
+- No API calls or business logic in templates — only display `weather` fields passed from routes.
+- Error UI lives in `_error.html`; keep messaging user-friendly.
+- Link static assets with `url_for('static', filename='...')`.
+- Prefer accessible labels on form inputs; include attribution link to Open-Meteo in the footer.
+- `static/app.js` may update the DOM and use `localStorage`; never call Open-Meteo from the browser.

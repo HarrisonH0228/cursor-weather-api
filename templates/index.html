@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather — {{ weather.city }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body
+  data-default-city="{{ default_city }}"
+  data-cache-ttl-minutes="{{ cache_ttl_minutes }}"
+>
+  <main class="card" id="weather-card">
+    <header>
+      <h1 id="city-name">{{ weather.city }}</h1>
+      <p class="conditions" id="conditions">{{ weather.description }}</p>
+    </header>
+
+    <p class="status-hint" id="status-message" hidden aria-live="polite"></p>
+
+    <section class="metrics" id="metrics" aria-label="Current conditions">
+      <div class="metric">
+        <span class="label">Temperature</span>
+        <span class="value" id="temperature">{{ "%.1f"|format(weather.temperature_c) }}°C</span>
+      </div>
+      <div class="metric" id="wind-row"{% if weather.wind_speed_kmh is none %} hidden{% endif %}>
+        <span class="label">Wind</span>
+        <span class="value" id="wind">{% if weather.wind_speed_kmh is not none %}{{ "%.1f"|format(weather.wind_speed_kmh) }} km/h{% endif %}</span>
+      </div>
+    </section>
+
+    <p class="updated" id="updated">{% if weather.fetched_at %}Last updated {{ weather.fetched_at }}{% endif %}</p>
+
+    <form class="refresh-form" id="search-form" action="{{ url_for('refresh') }}" method="post">
+      <label for="city">City</label>
+      <input type="text" id="city" name="city" placeholder="Leave blank for default">
+      <label class="checkbox-label">
+        <input type="checkbox" id="force" name="force" value="true">
+        Force refresh (bypass cache)
+      </label>
+      <button type="submit" id="search-button">Search</button>
+    </form>
+  </main>
+
+  <footer>
+    <p>Data from <a href="https://open-meteo.com/" rel="noopener noreferrer">Open-Meteo</a></p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>
