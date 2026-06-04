@@ -48,11 +48,11 @@ flask --app "app:create_app()" run
 
 Open http://127.0.0.1:5000/ in Chrome or Safari (Cursor’s built-in browser may show a blank page).
 
-The scheduler fetches the default city on startup and every `REFRESH_INTERVAL_MINUTES`. Use the **Search** form to look up another city without a full page reload.
+The scheduler fetches the default city on startup and every `REFRESH_INTERVAL_MINUTES` (always calls Open-Meteo, ignoring TTL). Use the **Search** form to look up another city without a full page reload.
 
 ## Caching (rate-limit friendly)
 
-**Server cache** (`data/cache.json`): stores multiple cities by normalized search key. Repeat lookups within `CACHE_TTL_MINUTES` skip Open-Meteo calls. Check **Force refresh** to bypass TTL. On each refresh (scheduler every `REFRESH_INTERVAL_MINUTES`, manual search, or API call), entries older than `CACHE_TTL_MINUTES` are **removed** from the file—only fresh cities are kept.
+**Server cache** (`data/cache.json`): stores multiple cities by normalized search key. Repeat manual lookups within `CACHE_TTL_MINUTES` skip Open-Meteo calls. Check **Force refresh** to bypass TTL. Background scheduler refresh always re-fetches `DEFAULT_CITY` from the API. On each cache write, entries older than `CACHE_TTL_MINUTES` are **removed** from the file—only fresh cities are kept.
 
 **Browser cache** (`localStorage`): mirrors successful lookups for the same TTL so re-searching a city in one session can avoid even calling `/api/refresh`. Stale browser entries are pruned after each API response.
 

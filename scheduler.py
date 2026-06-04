@@ -20,6 +20,10 @@ def _refresh_interval_minutes() -> int:
     return int(os.getenv("REFRESH_INTERVAL_MINUTES", "15"))
 
 
+def _scheduled_refresh() -> None:
+    refresh_weather(force=True)
+
+
 def init_scheduler(app=None) -> BackgroundScheduler:
     global _scheduler
     if _scheduler is not None:
@@ -28,7 +32,7 @@ def init_scheduler(app=None) -> BackgroundScheduler:
     interval = _refresh_interval_minutes()
     _scheduler = BackgroundScheduler(daemon=True)
     _scheduler.add_job(
-        refresh_weather,
+        _scheduled_refresh,
         "interval",
         minutes=interval,
         id="weather_refresh",
@@ -37,7 +41,7 @@ def init_scheduler(app=None) -> BackgroundScheduler:
     _scheduler.start()
     logger.info("Weather scheduler started (every %s minutes)", interval)
 
-    refresh_weather()
+    _scheduled_refresh()
 
     atexit.register(shutdown_scheduler)
     return _scheduler
