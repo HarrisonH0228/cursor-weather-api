@@ -1,5 +1,5 @@
 {
-  "active_key": "san francisco",
+  "active_key": "kansas city",
   "entries": {
     "san francisco": {
       "status": "ok",
@@ -7,10 +7,22 @@
       "city": "San Francisco, California, United States",
       "latitude": 37.77493,
       "longitude": -122.41942,
-      "temperature_c": 20.4,
-      "wind_speed_kmh": 7.4,
+      "temperature_c": 21.9,
+      "wind_speed_kmh": 21.7,
       "description": "Clear sky",
-      "fetched_at": "2026-06-04T18:42:07.730240+00:00",
+      "fetched_at": "2026-06-04T21:53:49.378768+00:00",
+      "error": null
+    },
+    "kansas city": {
+      "status": "ok",
+      "query": "Kansas City",
+      "city": "Kansas City, Missouri, United States",
+      "latitude": 39.09973,
+      "longitude": -94.57857,
+      "temperature_c": 28.4,
+      "wind_speed_kmh": 19.6,
+      "description": "Overcast",
+      "fetched_at": "2026-06-04T21:54:18.349247+00:00",
       "error": null
     }
   }
