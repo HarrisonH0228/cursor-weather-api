@@ -266,45 +266,106 @@ no
     i. store: dict, and always_keep: str
     ii. it returns a new dictionary which has the stale entries pruned from it
 3. What happens if the input is wrong or missing?
-- 
+- If the store dictionary isn't in the correct shape it will crash, it should work if always_keep is wrong or missing though
 4. Is there a simpler way to write this?
+no
 
 ### _error_entry(message: str, query)
 1. What does this function do?
+- helps format an errored request in dictionary format
 2. What does it take as input, and what does it return?
-    i. 
-    ii. 
+    i. it takes message and query as the input
+    ii. it returns a dictionary with the errored city and message
 3. What happens if the input is wrong or missing?
+- If message is blank it should be fine, but it will error if missing, query missing won't error 
 4. Is there a simpler way to write this?
+- no
 
 ### _persist_entry(store: dict, key: str, entry: dict) -> None:
 1. What does this function do?
+- strip entry of from_cache then store it as active_key, then prune stale entries then save cache
 2. What does it take as input, and what does it return?
-    i. 
-    ii. 
+    i. store dictionary, key string, entry dictionary
+    ii. nothing
 3. What happens if the input is wrong or missing?
+- If store isn't correctly formatted it may work but will have trouble later, if key is missing it will error, if key is wrong or blank it may confuse later lookups, entry will error if missing but it should work as long as anything is there
 4. Is there a simpler way to write this?
+- no
 
 ### _response_with_meta(entry: dict, from_cache: bool) -> dict:
+1. This adds a "from_cache" flag to the entry so the program knows the entry has been cached and isn't straight from the API
+2. It takes entry and from_cache as inputs
+    - it returns a dictionary entry with "from_cache" added
+3. It should work as long as entry and from_cache exist and aren't None type and from_cache is a boolean
+4. no
 
 ### _stale_response(existing: dict, warning: str) -> dict:
+1. when the api fails, but the cache still has good old data it will set the data to stale with a warning message for the user when they request it
+2. it takes existing and warning inputs
+- it returns a new dictionary entry with the state, stale, and warning keys updated
+3. It may not function as intended if existing dict isn't formatted correctly, if won't work if either variables are missing or None type.
+4. grabbing the existing data in the result = { } section can be simplified to a few less lines.
 
 ### _maybe_return_stale(existing: dict | None, warning: str) -> dict | None:
+1. it checks if a entry exists and is "ok", then it adds a warning to the entry that it may be outdated information
+2. it takes existing and warning inputs
+- it returns either an updated dict entry with the warning or Nothing if there is no good cached entry
+3. if existing is missing it will return None, if warning is missing it will error, if warning is an empty string it will just have no warning message
+4. no
 
 ### _geocode(city: str) -> tuple[float, float, str]:
+1. takes a city name and uses it on the API to get coordinates, and turns it into a display name from the city region and country, it returns a tuple of latitude longitude and display name
+2. it takes city string as input
+3. It won't function without a city string input, if the input is spelled incorrectly it will just return a manual error
+4. you could move the name admin country code into its own function so the code is easier to read but nothing else you can really do about it.
 
 ### _fetch_current(latitude: float, longitude: float) -> dict:
+1. it fetches the current "right-now" weather from the API at that location
+2. it takes latitude and longitude as input
+- it returns a dict entry with lat, long, current temp wind speed and weather code, and timezone
+3. if it's missing latitude or longitude it won't be able to function correctly, it'll likely just default to a ValueError
+4. no
 
 ### _weather_description(code: int) -> str:
+1. gets the weather description matching the weather codes listed at the top of the file
+2. it takes the code as an int
+- it outputs a string as what the weather code means
+3. if it's missing the weather code it will default to "unknown conditions"
+4. no its 1 line
 
 ### refresh_weather(city: str | None = None, force: bool = False) -> dict:
+1. the main function for getting weather from a city, it uses a city/default city then checks if it has cached data for the city, if not it geocodes the city and fetches the current weather and saves it to cache, if the API fails and they still have old cached data it'll display the old data with a disclaimer that it may be outdated
+2. it takes city name and force as inputs
+- it returns a dictionary entry of the data it fetched, old cached data, or nothing depending on what happens while it's operating
+3. if it's missing the city name it will error/return nothing
+4. no
 
 ## scheduler.py
 
 ### _refresh_interval_minutes() -> int:
+1. it returns the refresh interval in minutes, and if it can't find the value in .env it sends the default value of 15min
+2. no inputs
+- returns int of interval in minutes
+3. no inputs
+4. no 
 
 ### _scheduled_refresh() -> None:
+1. it runs the refresh_weather function (likely used by another function to run the refresh on an interval)
+2. no inputs
+- no returns
+3. no inputs
+4. no
 
 ### init_scheduler(app=None) -> BackgroundScheduler:
+1. this function checks if a scheduler object exists, if not, it makes a scheduler object and sets the interval to 15min using the other functions in the scheduler.py file
+2. no inputs?
+- returns backgroundScheduler object
+3. no inputs
+4. removing the app parameter would make it less confusing bc it's not used at all
 
 ### shutdown_scheduler() -> None:
+1. checks if a scheduler is running, if yes, then it shuts it down to prevent memory leakage
+2. no inputs
+- no returns
+3. no inputs
+4. no
