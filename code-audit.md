@@ -369,3 +369,11 @@ no
 - no returns
 3. no inputs
 4. no
+
+## Refactored Functions
+
+### search() and api_refresh()
+- These functions both do the exact same thing, so I combined them into one function with two routes: search().
+
+### refresh()
+- This function performs nearly the same action as _search_handler() so I removed its code and added a call to _search_handler() inside to remove a few lines of code.

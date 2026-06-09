@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, redirect, render_template, request, url_for
 from werkzeug.exceptions import HTTPException
 
+from favorites import add_favorite, list_favorites, remove_favorite
 from fetcher import get_cached_weather, get_display_weather, refresh_weather
 from scheduler import init_scheduler
 
@@ -51,18 +52,12 @@ def create_app(enable_scheduler: bool = True) -> Flask:
 
     @app.route("/refresh", methods=["POST"])
     def refresh():
-        city = request.form.get("city", "").strip() or None
-        force = request.form.get("force") == "true"
-        refresh_weather(city, force=force)
+        _search_handler()
         return redirect(url_for("index"))
 
     @app.route("/search", methods=["POST"])
-    def search():
-        result = _search_handler()
-        return jsonify(result), 200
-
     @app.route("/api/refresh", methods=["POST"])
-    def api_refresh():
+    def search():
         result = _search_handler()
         return jsonify(result), 200
 
@@ -73,6 +68,27 @@ def create_app(enable_scheduler: bool = True) -> Flask:
         if not weather:
             return jsonify({"error": "No cached weather for that city"}), 404
         return jsonify(weather), 200
+
+    @app.route("/api/favorites", methods=["GET"])
+    def api_favorites_list():
+        return jsonify({"favorites": list_favorites()}), 200
+
+    @app.route("/api/favorites", methods=["POST"])
+    def api_favorites_add():
+        data = request.get_json(silent=True) or {}
+        query = (data.get("query") or "").strip()
+        if not query:
+            return jsonify({"error": "query is required"}), 400
+        label = (data.get("label") or "").strip() or None
+        favorites = add_favorite(query, label=label)
+        return jsonify({"favorites": favorites}), 200
+
+    @app.route("/api/favorites/<key>", methods=["DELETE"])
+    def api_favorites_remove(key):
+        favorites = remove_favorite(key)
+        if favorites is None:
+            return jsonify({"error": "Favorite not found"}), 404
+        return jsonify({"favorites": favorites}), 200
 
     @app.errorhandler(HTTPException)
     def handle_http_exception(e):

@@ -8,7 +8,8 @@ alwaysApply: true
 ## Module boundaries
 
 - **`fetcher.py`** — Open-Meteo HTTP, `data/cache.json` read/write, TTL, stale-on-outage, cache pruning.
-- **`app.py`** — Flask routes only; delegates to fetcher. No `requests` in routes.
+- **`favorites.py`** — `data/favorites.json` read/write; star/favorite city list (no TTL).
+- **`app.py`** — Flask routes only; delegates to fetcher and favorites. No `requests` in routes.
 - **`scheduler.py`** — APScheduler background job; calls `refresh_weather(force=True)` for `DEFAULT_CITY`.
 
 ## Cache (`data/cache.json`)
@@ -20,6 +21,15 @@ alwaysApply: true
 - **Stale semantics:** If the API is down but a prior `ok` entry exists, return it with `stale: true` and do not overwrite the file with an error.
 - **Prune:** Entries older than `CACHE_TTL_MINUTES` are removed on cache writes (except `always_keep` key).
 
+## Favorites (`data/favorites.json`)
+
+```json
+{ "favorites": [{ "key": "london", "query": "London", "label": "London, England", "added_at": "..." }] }
+```
+
+- **Separate from weather cache** — favorites are user intent, not pruned by TTL.
+- **Key normalization** — same as cache (`strip().lower()` via `_cache_key` from fetcher).
+
 ## Routes
 
 | Route | Purpose |
@@ -28,11 +38,14 @@ alwaysApply: true
 | `POST /search` | AJAX city search (primary); JSON in/out |
 | `POST /api/refresh` | Alias of `/search` |
 | `POST /refresh` | No-JS form fallback (redirect) |
+| `GET /api/favorites` | List starred cities (JSON) |
+| `POST /api/favorites` | Add favorite: `{"query": "London", "label": "..."}` |
+| `DELETE /api/favorites/<key>` | Remove favorite by normalized key |
 
 ## Frontend
 
 - **Bootstrap 5** via CDN in `templates/base.html`.
-- **`static/app.js`** — `fetch("/search")`, localStorage TTL mirror, local-time `fetched_at` display.
+- **`static/app.js`** — `fetch("/search")`, favorites API, localStorage TTL mirror, local-time `fetched_at` display.
 
 ## External API
 

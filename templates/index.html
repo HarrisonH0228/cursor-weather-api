@@ -8,8 +8,21 @@
     <div class="card shadow" id="weather-card">
       <div class="card-body">
         <header class="mb-3">
-          <h1 class="h3 card-title mb-1" id="city-name">{{ weather.city }}</h1>
-          <p class="text-muted mb-0" id="conditions">{{ weather.description }}</p>
+          <div class="d-flex align-items-start justify-content-between gap-2">
+            <div>
+              <h1 class="h3 card-title mb-1" id="city-name">{{ weather.city }}</h1>
+              <p class="text-muted mb-0" id="conditions">{{ weather.description }}</p>
+            </div>
+            <button
+              type="button"
+              class="btn btn-outline-warning btn-sm flex-shrink-0"
+              id="favorite-toggle"
+              aria-label="Add to favorites"
+              title="Add to favorites"
+              data-query="{{ weather.query or weather.city }}"
+              data-label="{{ weather.city }}"
+            >☆</button>
+          </div>
         </header>
 
         <div id="stale-alert" class="alert alert-warning{% if not weather.stale %} d-none{% endif %}" role="alert">
@@ -44,6 +57,12 @@
           </div>
           <button type="submit" class="btn btn-primary w-100" id="search-button">Search</button>
         </form>
+
+        <section class="mt-4" id="favorites-section" aria-label="Favorite cities">
+          <h2 class="h6 text-muted mb-2">Favorites</h2>
+          <p class="small text-muted mb-2" id="favorites-empty">No favorites yet — star a city to save it.</p>
+          <div class="list-group" id="favorites-list" role="list"></div>
+        </section>
       </div>
     </div>
   </div>

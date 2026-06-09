@@ -8,8 +8,10 @@ Warm-up weather dashboard by **harrisonhoggatt**. Flask app with Bootstrap 5 UI,
 cursor-weather-api/
 ├── app.py               # Flask routes only
 ├── fetcher.py           # Open-Meteo API calls and cache I/O
+├── favorites.py         # Starred cities (data/favorites.json)
 ├── scheduler.py         # Background refresh (APScheduler)
 ├── data/cache.json
+├── data/favorites.json
 ├── templates/
 │   ├── base.html        # Bootstrap 5 layout
 │   ├── index.html
@@ -56,6 +58,7 @@ Open http://127.0.0.1:5000/ in Chrome or Safari.
 - **Bootstrap 5** dashboard reading from cache
 - **Scheduler:** default city refreshed every 15 minutes (`force=True`, always hits API)
 - **Search:** in-page `POST /search` via JavaScript (no full reload)
+- **Favorites:** star cities; persisted in `data/favorites.json`; click a favorite to load weather
 - **API down:** returns stale cached weather + timestamp when prior data exists
 - **Last updated:** always shown (local timezone in browser)
 - **Errors:** `_error.html` for failures and unhandled exceptions (no stack traces)
@@ -71,6 +74,9 @@ Manual search respects `CACHE_TTL_MINUTES` unless **Force refresh** is checked. 
 | `POST /search` | Primary AJAX search: `{"city": "London", "force": false}` |
 | `POST /api/refresh` | Alias of `/search` |
 | `GET /api/weather?city=` | Read-only cache lookup |
+| `GET /api/favorites` | List starred cities |
+| `POST /api/favorites` | Add favorite: `{"query": "London", "label": "..."}` |
+| `DELETE /api/favorites/<key>` | Remove favorite by normalized key |
 
 ## Tests
 

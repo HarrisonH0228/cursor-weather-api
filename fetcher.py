@@ -256,7 +256,7 @@ def _fetch_current(latitude: float, longitude: float) -> dict:
     if "temperature_2m" not in current:
         raise ValueError("Forecast response missing current weather")
     return current
-
+    
 
 def _weather_description(code: int) -> str:
     return WMO_DESCRIPTIONS.get(code, "Unknown conditions")

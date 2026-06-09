@@ -1,5 +1,9 @@
 const STORAGE_KEY = "weather_city_cache_v1";
 
+let currentQuery = null;
+let currentKey = null;
+let favorites = [];
+
 function cacheKey(city) {
   return city.trim().toLowerCase();
 }
@@ -123,6 +127,9 @@ function renderWeather(data, hint) {
   const card = document.getElementById("weather-card");
   card.classList.remove("border-danger");
 
+  currentQuery = data.query || data.city || null;
+  currentKey = currentQuery ? cacheKey(currentQuery) : null;
+
   document.getElementById("city-name").textContent = data.city || data.query || "";
   const conditions = document.getElementById("conditions");
   conditions.textContent = data.description || "";
@@ -150,6 +157,195 @@ function renderWeather(data, hint) {
 
   document.title = `Weather — ${data.city || data.query || ""}`;
   setHint(hint || "");
+  updateStarButton();
+}
+
+function isFavorited(key) {
+  return favorites.some((item) => item.key === key);
+}
+
+function updateStarButton() {
+  const button = document.getElementById("favorite-toggle");
+  if (!button) return;
+
+  if (!currentKey || !currentQuery) {
+    button.hidden = true;
+    return;
+  }
+
+  button.hidden = false;
+  button.dataset.query = currentQuery;
+  button.dataset.label = document.getElementById("city-name")?.textContent || currentQuery;
+
+  const starred = isFavorited(currentKey);
+  button.textContent = starred ? "★" : "☆";
+  button.classList.toggle("btn-warning", starred);
+  button.classList.toggle("btn-outline-warning", !starred);
+  button.setAttribute("aria-label", starred ? "Remove from favorites" : "Add to favorites");
+  button.title = starred ? "Remove from favorites" : "Add to favorites";
+}
+
+function renderFavoritesList() {
+  const list = document.getElementById("favorites-list");
+  const empty = document.getElementById("favorites-empty");
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  if (!favorites.length) {
+    if (empty) empty.classList.remove("d-none");
+    updateStarButton();
+    return;
+  }
+
+  if (empty) empty.classList.add("d-none");
+
+  for (const item of favorites) {
+    const row = document.createElement("div");
+    row.className = "list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-2";
+    row.setAttribute("role", "listitem");
+    row.dataset.query = item.query;
+    row.dataset.key = item.key;
+
+    const label = document.createElement("span");
+    label.className = "flex-grow-1 text-truncate";
+    label.textContent = item.label || item.query;
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "btn btn-sm btn-outline-secondary";
+    removeBtn.setAttribute("aria-label", `Remove ${item.label || item.query} from favorites`);
+    removeBtn.textContent = "×";
+    removeBtn.dataset.key = item.key;
+
+    row.appendChild(label);
+    row.appendChild(removeBtn);
+    list.appendChild(row);
+  }
+
+  updateStarButton();
+}
+
+async function loadFavorites() {
+  try {
+    const response = await fetch("/api/favorites");
+    if (!response.ok) return;
+    const data = await response.json();
+    favorites = data.favorites || [];
+    renderFavoritesList();
+  } catch {
+    /* ignore — list stays empty */
+  }
+}
+
+async function addFavorite(query, label) {
+  const response = await fetch("/api/favorites", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, label }),
+  });
+  if (!response.ok) return false;
+  const data = await response.json();
+  favorites = data.favorites || [];
+  renderFavoritesList();
+  return true;
+}
+
+async function removeFavoriteByKey(key) {
+  const response = await fetch(`/api/favorites/${encodeURIComponent(key)}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) return false;
+  const data = await response.json();
+  favorites = data.favorites || [];
+  renderFavoritesList();
+  return true;
+}
+
+async function handleFavoriteToggle() {
+  if (!currentKey || !currentQuery) return;
+
+  const button = document.getElementById("favorite-toggle");
+  if (button) button.disabled = true;
+
+  try {
+    if (isFavorited(currentKey)) {
+      await removeFavoriteByKey(currentKey);
+    } else {
+      const label = document.getElementById("city-name")?.textContent || currentQuery;
+      await addFavorite(currentQuery, label);
+    }
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+async function loadFavoriteWeather(query) {
+  const input = document.getElementById("city");
+  if (input) input.value = query;
+
+  const key = cacheKey(query);
+  const clientEntry = getClientCache()[key];
+  if (isClientFresh(clientEntry)) {
+    const data = clientEntry.data;
+    if (data.status === "ok" || data.stale) {
+      renderWeather(data, "Loaded from browser cache.");
+    } else {
+      renderError(data);
+    }
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const data = await fetchWeather(query, false);
+    const hint = hintForResponse(data);
+    if (data.status === "ok") {
+      renderWeather(data, hint);
+      setClientCache(key, data);
+      pruneClientCache();
+    } else {
+      renderError(data, hint);
+      pruneClientCache();
+    }
+  } catch {
+    renderError({ error: "Could not reach the server. Try again." });
+  } finally {
+    setLoading(false);
+  }
+}
+
+function initFavorites() {
+  const toggle = document.getElementById("favorite-toggle");
+  if (toggle) {
+    toggle.addEventListener("click", handleFavoriteToggle);
+  }
+
+  const list = document.getElementById("favorites-list");
+  if (list) {
+    list.addEventListener("click", (event) => {
+      const removeBtn = event.target.closest("button[data-key]");
+      if (removeBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        removeFavoriteByKey(removeBtn.dataset.key);
+        return;
+      }
+
+      const row = event.target.closest("[data-query]");
+      if (row?.dataset.query) {
+        loadFavoriteWeather(row.dataset.query);
+      }
+    });
+  }
+
+  const button = document.getElementById("favorite-toggle");
+  if (button?.dataset.query) {
+    currentQuery = button.dataset.query;
+    currentKey = cacheKey(currentQuery);
+  }
+
+  loadFavorites();
 }
 
 function renderError(data, hint) {
@@ -157,6 +353,9 @@ function renderError(data, hint) {
     renderWeather(data, hint || data.warning);
     return;
   }
+
+  currentQuery = data.query || data.city || null;
+  currentKey = currentQuery ? cacheKey(currentQuery) : null;
 
   const card = document.getElementById("weather-card");
   card.classList.add("border-danger");
@@ -178,6 +377,7 @@ function renderError(data, hint) {
   }
 
   document.title = "Weather unavailable";
+  updateStarButton();
 }
 
 function setLoading(loading) {
@@ -259,6 +459,7 @@ async function handleSearch(event) {
 
 document.addEventListener("DOMContentLoaded", () => {
   formatInitialTimestamp();
+  initFavorites();
   const form = document.getElementById("search-form");
   if (form) {
     form.addEventListener("submit", handleSearch);
