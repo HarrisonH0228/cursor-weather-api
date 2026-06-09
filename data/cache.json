@@ -1,5 +1,5 @@
 {
-  "active_key": "san francisco",
+  "active_key": "barcelona",
   "entries": {
     "san francisco": {
       "status": "ok",
@@ -7,10 +7,10 @@
       "city": "San Francisco, California, United States",
       "latitude": 37.77493,
       "longitude": -122.41942,
-      "temperature_c": 16.1,
-      "wind_speed_kmh": 11.3,
-      "description": "Mainly clear",
-      "fetched_at": "2026-06-09T16:09:58.644339+00:00",
+      "temperature_c": 19.2,
+      "wind_speed_kmh": 22.8,
+      "description": "Clear sky",
+      "fetched_at": "2026-06-09T21:04:26.293908+00:00",
       "error": null
     },
     "kansas city": {
@@ -19,10 +19,34 @@
       "city": "Kansas City, Missouri, United States",
       "latitude": 39.09973,
       "longitude": -94.57857,
-      "temperature_c": 26.7,
-      "wind_speed_kmh": 15.1,
+      "temperature_c": 33.0,
+      "wind_speed_kmh": 17.9,
+      "description": "Mainly clear",
+      "fetched_at": "2026-06-09T21:06:12.890621+00:00",
+      "error": null
+    },
+    "toronto": {
+      "status": "ok",
+      "query": "Toronto",
+      "city": "Toronto, Ontario, Canada",
+      "latitude": 43.70643,
+      "longitude": -79.39864,
+      "temperature_c": 26.3,
+      "wind_speed_kmh": 11.2,
       "description": "Overcast",
-      "fetched_at": "2026-06-09T16:08:37.547401+00:00",
+      "fetched_at": "2026-06-09T21:06:20.887542+00:00",
+      "error": null
+    },
+    "barcelona": {
+      "status": "ok",
+      "query": "Barcelona",
+      "city": "Barcelona, Catalonia, Spain",
+      "latitude": 41.38879,
+      "longitude": 2.15899,
+      "temperature_c": 21.3,
+      "wind_speed_kmh": 1.8,
+      "description": "Overcast",
+      "fetched_at": "2026-06-09T21:06:33.878666+00:00",
       "error": null
     }
   }

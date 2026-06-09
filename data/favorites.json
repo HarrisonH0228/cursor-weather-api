@@ -1,6 +1,18 @@
 {
   "favorites": [
     {
+      "key": "barcelona",
+      "query": "Barcelona",
+      "label": "Barcelona, Catalonia, Spain",
+      "added_at": "2026-06-09T21:06:37.598777+00:00"
+    },
+    {
+      "key": "toronto",
+      "query": "Toronto",
+      "label": "Toronto, Ontario, Canada",
+      "added_at": "2026-06-09T21:06:23.062717+00:00"
+    },
+    {
       "key": "kansas city",
       "query": "Kansas City",
       "label": "Kansas City, Missouri, United States",

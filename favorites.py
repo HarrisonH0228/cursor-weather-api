@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fetcher import _cache_key
+from fetcher import _cache_key, get_cached_weather
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,23 @@ def add_favorite(query: str, label: str | None = None) -> list[dict]:
     store["favorites"] = favorites
     save_favorites(store)
     return favorites
+
+
+def list_favorites_with_weather() -> list[dict]:
+    result: list[dict] = []
+    for item in list_favorites():
+        cached = get_cached_weather(item.get("query"))
+        weather = cached if cached.get("status") == "ok" else None
+        result.append(
+            {
+                "key": item.get("key"),
+                "query": item.get("query"),
+                "label": item.get("label"),
+                "added_at": item.get("added_at"),
+                "weather": weather,
+            }
+        )
+    return result
 
 
 def remove_favorite(key: str) -> list[dict] | None:

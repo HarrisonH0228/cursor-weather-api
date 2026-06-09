@@ -39,13 +39,14 @@ alwaysApply: true
 | `POST /api/refresh` | Alias of `/search` |
 | `POST /refresh` | No-JS form fallback (redirect) |
 | `GET /api/favorites` | List starred cities (JSON) |
+| `GET /api/favorites/weather` | Favorites with cached weather snippets (JSON) |
 | `POST /api/favorites` | Add favorite: `{"query": "London", "label": "..."}` |
 | `DELETE /api/favorites/<key>` | Remove favorite by normalized key |
 
 ## Frontend
 
 - **Bootstrap 5** via CDN in `templates/base.html`.
-- **`static/app.js`** — `fetch("/search")`, favorites API, localStorage TTL mirror, local-time `fetched_at` display.
+- **`static/app.js`** — `fetch("/search")`, favorites sidebar (`GET /api/favorites/weather`), localStorage TTL mirror, local-time `fetched_at` display.
 
 ## External API
 

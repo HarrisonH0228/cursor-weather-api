@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, redirect, render_template, request, url_for
 from werkzeug.exceptions import HTTPException
 
-from favorites import add_favorite, list_favorites, remove_favorite
+from favorites import add_favorite, list_favorites, list_favorites_with_weather, remove_favorite
 from fetcher import get_cached_weather, get_display_weather, refresh_weather
 from scheduler import init_scheduler
 
@@ -72,6 +72,10 @@ def create_app(enable_scheduler: bool = True) -> Flask:
     @app.route("/api/favorites", methods=["GET"])
     def api_favorites_list():
         return jsonify({"favorites": list_favorites()}), 200
+
+    @app.route("/api/favorites/weather", methods=["GET"])
+    def api_favorites_weather():
+        return jsonify({"favorites": list_favorites_with_weather()}), 200
 
     @app.route("/api/favorites", methods=["POST"])
     def api_favorites_add():

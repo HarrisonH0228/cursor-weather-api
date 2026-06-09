@@ -102,3 +102,101 @@ def test_favorites_persisted_to_file(favorites_file):
     favorites.add_favorite("Tokyo", label="Tokyo, Japan")
     stored = json.loads(favorites_file.read_text(encoding="utf-8"))
     assert stored["favorites"][0]["key"] == "tokyo"
+
+
+def test_list_favorites_with_weather_no_cache(favorites_file):
+    favorites.add_favorite("London", label="London, England")
+    result = favorites.list_favorites_with_weather()
+    assert len(result) == 1
+    assert result[0]["key"] == "london"
+    assert result[0]["query"] == "London"
+    assert result[0]["label"] == "London, England"
+    assert result[0]["weather"] is None
+
+
+def test_list_favorites_with_weather_with_cache(favorites_file, tmp_path, monkeypatch):
+    import fetcher
+
+    monkeypatch.setattr(fetcher, "CACHE_PATH", tmp_path / "cache.json")
+    favorites.add_favorite("London", label="London, England")
+    cache_entry = {
+        "status": "ok",
+        "city": "London",
+        "query": "London",
+        "description": "Partly cloudy",
+        "temperature_c": 12.5,
+        "fetched_at": "2026-06-09T12:00:00+00:00",
+    }
+    fetcher.save_cache(
+        {
+            "active_key": "london",
+            "entries": {"london": cache_entry},
+        }
+    )
+
+    result = favorites.list_favorites_with_weather()
+    assert len(result) == 1
+    assert result[0]["weather"]["status"] == "ok"
+    assert result[0]["weather"]["temperature_c"] == 12.5
+    assert result[0]["weather"]["description"] == "Partly cloudy"
+
+
+def test_list_favorites_with_weather_non_ok_cache(favorites_file, tmp_path, monkeypatch):
+    import fetcher
+
+    monkeypatch.setattr(fetcher, "CACHE_PATH", tmp_path / "cache.json")
+    favorites.add_favorite("Nowhere", label="Nowhere")
+    fetcher.save_cache(
+        {
+            "active_key": "nowhere",
+            "entries": {
+                "nowhere": {
+                    "status": "error",
+                    "error": "City not found",
+                    "query": "Nowhere",
+                }
+            },
+        }
+    )
+
+    result = favorites.list_favorites_with_weather()
+    assert len(result) == 1
+    assert result[0]["weather"] is None
+
+
+def test_api_favorites_weather_empty(client):
+    response = client.get("/api/favorites/weather")
+    assert response.status_code == 200
+    assert response.get_json() == {"favorites": []}
+
+
+def test_api_favorites_weather_merged(client, tmp_path, monkeypatch):
+    import fetcher
+
+    monkeypatch.setattr(fetcher, "CACHE_PATH", tmp_path / "cache.json")
+    favorites.add_favorite("Paris", label="Paris, France")
+    favorites.add_favorite("London", label="London, England")
+    fetcher.save_cache(
+        {
+            "active_key": "london",
+            "entries": {
+                "london": {
+                    "status": "ok",
+                    "city": "London",
+                    "query": "London",
+                    "description": "Clear sky",
+                    "temperature_c": 18.0,
+                    "fetched_at": "2026-06-09T12:00:00+00:00",
+                }
+            },
+        }
+    )
+
+    response = client.get("/api/favorites/weather")
+    assert response.status_code == 200
+    data = response.get_json()["favorites"]
+    assert len(data) == 2
+    assert data[0]["key"] == "london"
+    assert data[0]["weather"]["temperature_c"] == 18.0
+    assert data[1]["key"] == "paris"
+    assert data[1]["weather"] is None

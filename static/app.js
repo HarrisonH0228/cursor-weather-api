@@ -158,6 +158,7 @@ function renderWeather(data, hint) {
   document.title = `Weather — ${data.city || data.query || ""}`;
   setHint(hint || "");
   updateStarButton();
+  loadFavoritesSidebar();
 }
 
 function isFavorited(key) {
@@ -185,14 +186,14 @@ function updateStarButton() {
   button.title = starred ? "Remove from favorites" : "Add to favorites";
 }
 
-function renderFavoritesList() {
-  const list = document.getElementById("favorites-list");
+function renderFavoritesSidebar(items) {
+  const list = document.getElementById("favorites-sidebar-list");
   const empty = document.getElementById("favorites-empty");
   if (!list) return;
 
   list.innerHTML = "";
 
-  if (!favorites.length) {
+  if (!items.length) {
     if (empty) empty.classList.remove("d-none");
     updateStarButton();
     return;
@@ -200,25 +201,44 @@ function renderFavoritesList() {
 
   if (empty) empty.classList.add("d-none");
 
-  for (const item of favorites) {
+  for (const item of items) {
     const row = document.createElement("div");
-    row.className = "list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-2";
+    row.className =
+      "list-group-item list-group-item-action favorites-sidebar-item d-flex align-items-center justify-content-between gap-2";
+    if (item.key === currentKey) {
+      row.classList.add("active");
+    }
     row.setAttribute("role", "listitem");
     row.dataset.query = item.query;
     row.dataset.key = item.key;
 
-    const label = document.createElement("span");
-    label.className = "flex-grow-1 text-truncate";
+    const content = document.createElement("div");
+    content.className = "flex-grow-1 text-truncate me-2";
+
+    const label = document.createElement("div");
+    label.className = "text-truncate fw-medium";
     label.textContent = item.label || item.query;
+
+    const weatherEl = document.createElement("div");
+    weatherEl.className = "sidebar-weather text-truncate";
+    if (item.weather && item.weather.status === "ok") {
+      const desc = item.weather.description || "";
+      weatherEl.textContent = `${formatTemp(item.weather.temperature_c)} · ${desc}`;
+    } else {
+      weatherEl.textContent = "No data yet";
+    }
+
+    content.appendChild(label);
+    content.appendChild(weatherEl);
 
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
-    removeBtn.className = "btn btn-sm btn-outline-secondary";
+    removeBtn.className = "btn btn-sm btn-outline-secondary flex-shrink-0";
     removeBtn.setAttribute("aria-label", `Remove ${item.label || item.query} from favorites`);
     removeBtn.textContent = "×";
     removeBtn.dataset.key = item.key;
 
-    row.appendChild(label);
+    row.appendChild(content);
     row.appendChild(removeBtn);
     list.appendChild(row);
   }
@@ -226,13 +246,13 @@ function renderFavoritesList() {
   updateStarButton();
 }
 
-async function loadFavorites() {
+async function loadFavoritesSidebar() {
   try {
-    const response = await fetch("/api/favorites");
+    const response = await fetch("/api/favorites/weather");
     if (!response.ok) return;
     const data = await response.json();
     favorites = data.favorites || [];
-    renderFavoritesList();
+    renderFavoritesSidebar(favorites);
   } catch {
     /* ignore — list stays empty */
   }
@@ -245,9 +265,7 @@ async function addFavorite(query, label) {
     body: JSON.stringify({ query, label }),
   });
   if (!response.ok) return false;
-  const data = await response.json();
-  favorites = data.favorites || [];
-  renderFavoritesList();
+  await loadFavoritesSidebar();
   return true;
 }
 
@@ -256,9 +274,7 @@ async function removeFavoriteByKey(key) {
     method: "DELETE",
   });
   if (!response.ok) return false;
-  const data = await response.json();
-  favorites = data.favorites || [];
-  renderFavoritesList();
+  await loadFavoritesSidebar();
   return true;
 }
 
@@ -321,7 +337,7 @@ function initFavorites() {
     toggle.addEventListener("click", handleFavoriteToggle);
   }
 
-  const list = document.getElementById("favorites-list");
+  const list = document.getElementById("favorites-sidebar-list");
   if (list) {
     list.addEventListener("click", (event) => {
       const removeBtn = event.target.closest("button[data-key]");
@@ -345,7 +361,7 @@ function initFavorites() {
     currentKey = cacheKey(currentQuery);
   }
 
-  loadFavorites();
+  loadFavoritesSidebar();
 }
 
 function renderError(data, hint) {
@@ -378,6 +394,7 @@ function renderError(data, hint) {
 
   document.title = "Weather unavailable";
   updateStarButton();
+  loadFavoritesSidebar();
 }
 
 function setLoading(loading) {

@@ -3,8 +3,18 @@
 {% block title %}Weather — {{ weather.city }}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-8 col-lg-6">
+<div class="row g-4">
+  <aside class="col-lg-4 order-lg-0" id="favorites-sidebar">
+    <div class="card shadow">
+      <div class="card-body">
+        <h2 class="h5 card-title mb-3">Favorites</h2>
+        <p class="small text-muted mb-2" id="favorites-empty">No favorites yet — star a city to save it.</p>
+        <div class="list-group" id="favorites-sidebar-list" role="list"></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="col-lg-8">
     <div class="card shadow" id="weather-card">
       <div class="card-body">
         <header class="mb-3">
@@ -57,12 +67,6 @@
           </div>
           <button type="submit" class="btn btn-primary w-100" id="search-button">Search</button>
         </form>
-
-        <section class="mt-4" id="favorites-section" aria-label="Favorite cities">
-          <h2 class="h6 text-muted mb-2">Favorites</h2>
-          <p class="small text-muted mb-2" id="favorites-empty">No favorites yet — star a city to save it.</p>
-          <div class="list-group" id="favorites-list" role="list"></div>
-        </section>
       </div>
     </div>
   </div>

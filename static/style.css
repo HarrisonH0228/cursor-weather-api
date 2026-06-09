@@ -16,3 +16,21 @@ main.container {
 #search-button:disabled {
   cursor: not-allowed;
 }
+
+@media (min-width: 992px) {
+  #favorites-sidebar {
+    position: sticky;
+    top: 1rem;
+    align-self: flex-start;
+  }
+}
+
+.favorites-sidebar-item.active {
+  background-color: var(--bs-primary-bg-subtle, rgba(13, 110, 253, 0.1));
+  border-color: var(--bs-primary, #0d6efd);
+}
+
+.favorites-sidebar-item .sidebar-weather {
+  font-size: 0.875rem;
+  color: var(--bs-secondary-color, #6c757d);
+}
