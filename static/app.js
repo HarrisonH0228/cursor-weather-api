@@ -400,7 +400,7 @@ async function fetchWeather(city, force) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ city, force }),
   });
-  return response.json();
+  return response.json().catch(() => ({ error: "Server error"}));
 }
 
 function hintForResponse(data) {
